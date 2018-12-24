@@ -4,7 +4,8 @@
 
 ## Требуется
     - Phalcon > 3.0.0
-    - chocofamilyme/pathcorrelation 
+    - chocofamilyme/pathcorrelation
+    - sentry/sentry
     
 ## Использование
 
