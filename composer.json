@@ -19,8 +19,9 @@
   ],
   "require": {
     "php": ">= 7.0.0",
+    "ext-phalcon": ">= 3.0.0",
     "chocofamilyme/pathcorrelation": "0.2.*",
-    "ext-phalcon": ">= 3.0.0"
+    "sentry/sentry": "^1.10"
   },
   "autoload": {
     "psr-4": {
