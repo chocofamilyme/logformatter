@@ -158,6 +158,9 @@ class Sentry extends Logger\Adapter
     public function setTag(string $key, string $value): Sentry
     {
         if ($this->client) {
+            if (strlen($value) > 200) {
+                $value[0] = substr($value, 0, 200);
+            }
             $this->client->tags_context([$key => $value]);
         }
 
