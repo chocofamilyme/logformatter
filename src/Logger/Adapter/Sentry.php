@@ -159,8 +159,9 @@ class Sentry extends Logger\Adapter
     {
         if ($this->client) {
             if (strlen($value) > 200) {
-                $value[0] = substr($value, 0, 200);
+                $value = substr($value, 0, 200);
             }
+            
             $this->client->tags_context([$key => $value]);
         }
 
@@ -249,7 +250,7 @@ class Sentry extends Logger\Adapter
      */
     protected function initClient()
     {
-        if(PHP_SAPI == "cli"){
+        if (PHP_SAPI == "cli") {
             $this->config->options->curl_method = 'sync';
         }
 
