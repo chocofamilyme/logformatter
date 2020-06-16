@@ -18,7 +18,7 @@
     }
   ],
   "require": {
-    "php": ">= 7.0.0",
+    "php": ">= 7.2",
     "ext-json": "*",
     "ext-phalcon": ">= 3.0.0",
     "chocofamilyme/pathcorrelation": "0.2.*",

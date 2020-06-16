@@ -3,11 +3,14 @@ declare(strict_types = 1);
 
 namespace Chocofamily\Logger\Formatter;
 
+use Phalcon\Config;
 use Phalcon\Di;
 use Phalcon\Logger\Formatter;
 
 final class Logstash extends Formatter
 {
+    const DEFAULT_JSON_FLAGS = JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION | JSON_INVALID_UTF8_SUBSTITUTE;
+
     /**
      * @var string the name of the system for the Logstash log message, used to fill the @source field
      */
@@ -28,18 +31,13 @@ final class Logstash extends Formatter
      */
     protected $contextKey = 'context';
 
-    /**
-     * @var string
-     */
-    private $dateFormat;
-
     public function __construct()
     {
-        // logstash requires a ISO 8601 format date with optional millisecond precision.
-        $this->dateFormat = 'Y-m-d\TH:i:s.uP';
+        /** @var Config $config */
+        $config = Di::getDefault()->getShared('config');
 
-        $this->systemName      = $systemName ?? gethostname();
-        $this->applicationName = Di::getDefault()->getShared('config')->get('domain');
+        $this->systemName      = $config->get('server', gethostname());
+        $this->applicationName = $config->get('domain');
     }
 
     public function format($message, $type, $timestamp, $context = null)
@@ -50,16 +48,13 @@ final class Logstash extends Formatter
             'host'       => $this->systemName,
             'message'    => $message,
             'type'       => $this->getTypeString($type),
+            'datetime'   => $timestamp,
         ];
-
-        if ($this->applicationName) {
-            $message['type'] = $this->applicationName;
-        }
 
         if ($context) {
             $message[$this->contextKey] = $context;
         }
 
-        return \json_encode($message, JSON_UNESCAPED_UNICODE).PHP_EOL;
+        return \json_encode($message, self::DEFAULT_JSON_FLAGS).PHP_EOL;
     }
 }
