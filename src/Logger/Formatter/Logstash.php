@@ -31,6 +31,8 @@ final class Logstash extends Formatter
      */
     protected $contextKey = 'context';
 
+    protected $normalizer;
+
     public function __construct()
     {
         /** @var Config $config */
@@ -38,22 +40,27 @@ final class Logstash extends Formatter
 
         $this->systemName      = $config->get('server', gethostname());
         $this->applicationName = $config->get('domain');
+
+        $this->normalizer = new Normalizer();
     }
 
     public function format($message, $type, $timestamp, $context = null)
     {
         $message = [
-            '@timestamp' => $timestamp,
-            '@version'   => 1,
-            'host'       => $this->systemName,
-            'message'    => $message,
-            'type'       => $this->getTypeString($type),
-            'datetime'   => $timestamp,
+            '@timestamp'    => gmdate('c', $timestamp),
+            '@version'      => 1,
+            'host'          => $this->systemName,
+            'message'       => $message,
+            'type'          => $this->applicationName,
+            'datetime'      => $timestamp,
+            'level'         => $this->getTypeString($type),
+            'monolog_level' => $type,
         ];
 
         if ($context) {
-            $message[$this->contextKey] = $context;
+            $message[$this->contextKey] = $this->normalizer->normalize($context);
         }
+
 
         return \json_encode($message, self::DEFAULT_JSON_FLAGS).PHP_EOL;
     }

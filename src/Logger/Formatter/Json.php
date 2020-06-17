@@ -18,21 +18,35 @@ use Chocofamily\Http\CorrelationId;
  */
 class Json extends \Phalcon\Logger\Formatter
 {
+    const DEFAULT_JSON_FLAGS = JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION | JSON_INVALID_UTF8_SUBSTITUTE;
+
     private $appDomain;
 
     /** @var CorrelationId */
     private $correlationId;
 
+    /**
+     * @var string the key for 'context' fields from the Monolog record
+     */
+    protected $contextKey = 'context';
+
+    /**
+     * @var Normalizer
+     */
+    private $normalizer;
+
     public function __construct()
     {
         $this->appDomain     = \Phalcon\Di::getDefault()->getShared('config')->domain;
         $this->correlationId = CorrelationId::getInstance();
+        $this->normalizer = new Normalizer();
     }
 
     public function format($message, $type, $timestamp, $context = null)
     {
         if (is_array($context)) {
             $message = $this->interpolate($message, $context);
+            $message[$this->contextKey] = $this->normalizer->normalize($context);
         }
 
         $logData = [
@@ -44,6 +58,6 @@ class Json extends \Phalcon\Logger\Formatter
             "span_id"        => $this->correlationId->getSpanId(),
         ];
 
-        return \json_encode($logData, JSON_UNESCAPED_UNICODE).PHP_EOL;
+        return \json_encode($logData, self::DEFAULT_JSON_FLAGS).PHP_EOL;
     }
 }
