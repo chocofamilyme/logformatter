@@ -62,6 +62,6 @@ final class Logstash extends Formatter
         }
 
 
-        return \json_encode($message, self::DEFAULT_JSON_FLAGS);
+        return \json_encode($message, self::DEFAULT_JSON_FLAGS).PHP_EOL;
     }
 }
