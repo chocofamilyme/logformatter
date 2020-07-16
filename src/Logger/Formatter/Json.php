@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @package Chocolife.me
- * @author  Moldabayev Vadim <moldabayev.v@chocolife.kz>
- */
-
 namespace Chocofamily\Logger\Formatter;
 
 use Chocofamily\Http\CorrelationId;
@@ -18,7 +13,8 @@ use Chocofamily\Http\CorrelationId;
  */
 class Json extends \Phalcon\Logger\Formatter
 {
-    const DEFAULT_JSON_FLAGS = JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION | JSON_INVALID_UTF8_SUBSTITUTE;
+    const DEFAULT_JSON_FLAGS = JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION
+    | JSON_INVALID_UTF8_SUBSTITUTE;
 
     private $appDomain;
 
@@ -39,24 +35,25 @@ class Json extends \Phalcon\Logger\Formatter
     {
         $this->appDomain     = \Phalcon\Di::getDefault()->getShared('config')->domain;
         $this->correlationId = CorrelationId::getInstance();
-        $this->normalizer = new Normalizer();
+        $this->normalizer    = new Normalizer();
     }
 
     public function format($message, $type, $timestamp, $context = null)
     {
-        if (is_array($context)) {
-            $message = $this->interpolate($message, $context);
-            $message[$this->contextKey] = $this->normalizer->normalize($context);
-        }
-
         $logData = [
             "type"           => $this->getTypeString($type),
-            "message"        => $message,
             "server"         => $this->appDomain,
             "timestamp"      => $timestamp,
             "correlation_id" => $this->correlationId->getCorrelationId(),
             "span_id"        => $this->correlationId->getSpanId(),
         ];
+
+        if (is_array($context)) {
+            $message                    = $this->interpolate($message, $context);
+            $logData[$this->contextKey] = $this->normalizer->normalize($context);
+        }
+
+        $logData['message'] = $message;
 
         return \json_encode($logData, self::DEFAULT_JSON_FLAGS).PHP_EOL;
     }
