@@ -215,7 +215,10 @@ class Sentry extends Logger\Adapter
 
         if ($key && $project && $domain) {
             $dsn     = sprintf($this->dsnTemplate, $key, $domain, $project);
-            $options = ['dsn' => $dsn];
+            $options = [
+                'dsn'           => $dsn,
+                'environment'   => $this->environment
+            ];
             if (isset($this->config->options)) {
                 $options += $this->config->options->toArray();
             }
