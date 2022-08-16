@@ -18,6 +18,7 @@ use DateTimeZone;
  *
  * @author Menno Holtkamp
  * @author Jordi Boggiano <j.boggiano@seld.be>
+ * @psalm-immutable
  */
 class DateTimeImmutable extends \DateTimeImmutable implements \JsonSerializable
 {

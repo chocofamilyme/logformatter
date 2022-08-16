@@ -107,6 +107,7 @@ final class Utils
      * @param  int               $encodeFlags flags to pass to json encode, defaults to JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION
      * @throws \RuntimeException if failure can't be corrected
      * @return string            JSON encoded data after error correction
+     * @psalm-suppress InvalidArgument
      */
     public static function handleJsonError(int $code, $data, ?int $encodeFlags = null): string
     {
