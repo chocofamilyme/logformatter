@@ -301,35 +301,21 @@ class Sentry extends Logger\Adapter
      *
      * @param string|\Throwable $loggable
      * @param int               $type
-     * @param array             $context
      *
      * @return void
      */
-    protected function send($loggable, int $type, array $context = [])
+    protected function send($loggable, int $type)
     {
         if (!$this->shouldSend($type)) {
             return;
         }
 
-        $context += ['level' => static::toSentryLogLevel($type)];
-
-        // Wipe out extraneous keys. Issue #3.
-        $context = array_intersect_key($context, array_flip([
-            'context',
-            'extra',
-            'fingerprint',
-            'level',
-            'logger',
-            'release',
-            'tags',
-        ]));
-
-        // Tag current request ID for search/trace.
-        $this->client->tags_context(['request' => $this->correlationId->getCorrelationId()]);
+        $this->scope->setLevel(new Severity(static::toSentryLogLevel($type)));
+        $this->scope->setTag('correlationId', $this->correlationId->getCorrelationId());
 
         $this->lastEventId = $loggable instanceof \Throwable
-            ? $this->client->captureException($loggable, $context)
-            : $this->client->captureMessage($loggable, [], $context);
+            ? $this->client->captureException($loggable, $this->scope)
+            : $this->client->captureMessage($loggable, null, $this->scope);
     }
 
     /**
