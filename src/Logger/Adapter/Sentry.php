@@ -57,7 +57,7 @@ class Sentry extends Logger\Adapter
     /**
      * Instantiates new Sentry Adapter with given configuration.
      *
-     * @param \Phalcon\Config|array $config
+     * @param \Phalcon\Config $config
      */
     public function __construct(Config $config, string $environment)
     {
