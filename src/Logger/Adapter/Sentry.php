@@ -122,7 +122,7 @@ class Sentry extends Logger\Adapter
      * @param string $key
      * @param string $value
      *
-     * @return \CrazyFactory\PhalconLogger\Adapter\Sentry
+     * @return Sentry
      */
     public function setTag(string $key, string $value): Sentry
     {
