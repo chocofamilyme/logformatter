@@ -7,6 +7,7 @@ use Chocofamily\Http\CorrelationId;
 use Phalcon\Config;
 use Phalcon\Logger;
 use Sentry\Client;
+use Sentry\State\Scope;
 
 /**
  * The Sentry logger adapter for phalcon.
@@ -47,6 +48,11 @@ class Sentry extends Logger\Adapter
     protected $environment;
 
     /**
+     * @var Scope
+     */
+    protected $scope;
+
+    /**
      * Instantiates new Sentry Adapter with given configuration.
      *
      * @param \Phalcon\Config|array $config
@@ -57,6 +63,7 @@ class Sentry extends Logger\Adapter
         $this->environment   = $environment;
         $this->correlationId = CorrelationId::getInstance();
         $this->initClient();
+        $this->initScope();
     }
 
     /**
@@ -277,6 +284,14 @@ class Sentry extends Logger\Adapter
             $client = ClientBuilder::create($options)->getClient();
             $this->setClient($client);
         }
+    }
+
+    /**
+     * @return void
+     */
+    protected function initScope(): void
+    {
+        $this->scope = new Scope();
     }
 
     /**
