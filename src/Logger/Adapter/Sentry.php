@@ -251,10 +251,6 @@ class Sentry extends Logger\Adapter
      */
     protected function initClient()
     {
-        if (PHP_SAPI == "cli") {
-            $this->config->options->curl_method = 'sync';
-        }
-
         // Only initialize in configured environment(s).
         if (!in_array($this->environment, $this->config->environments->toArray(), true)) {
             return;
