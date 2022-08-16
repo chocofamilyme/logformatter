@@ -318,6 +318,10 @@ class Sentry extends Logger\Adapter
      */
     protected function shouldSend(int $type): bool
     {
+        if (!isset($this->config->levels)) {
+            return false;
+        }
+
         return $this->client && in_array($type, $this->config->levels->toArray(), true);
     }
 }
