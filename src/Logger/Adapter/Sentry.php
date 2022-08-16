@@ -69,16 +69,6 @@ class Sentry extends Logger\Adapter
     }
 
     /**
-     * @param string $level
-     *
-     * @return int|null
-     */
-    public static function toPhalconLogLevel(string $level)
-    {
-        return array_flip(static::LOG_LEVELS)[$level] ?? null;
-    }
-
-    /**
      * @param int $level
      *
      * @return string|null
