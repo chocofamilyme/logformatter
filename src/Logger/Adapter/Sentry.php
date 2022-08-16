@@ -130,8 +130,8 @@ class Sentry extends Logger\Adapter
             if (mb_strlen($value) > 200) {
                 $value = mb_substr($value, 0, 200);
             }
-            
-            $this->client->tags_context([$key => $value]);
+
+            $this->scope->setTag($key, $value);
         }
 
         return $this;
