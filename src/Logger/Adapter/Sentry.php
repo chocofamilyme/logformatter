@@ -14,16 +14,16 @@ class Sentry extends Logger\Adapter
 {
     // The map of Phalcon log levels to Sentry log levels. Throughout the application, we use only Phalcon levels.
     const LOG_LEVELS = [
-        Logger::EMERGENCE => \Raven_Client::FATAL,
-        Logger::CRITICAL  => \Raven_Client::FATAL,
-        Logger::ALERT     => \Raven_Client::INFO,
-        Logger::ERROR     => \Raven_Client::ERROR,
-        Logger::WARNING   => \Raven_Client::WARNING,
-        Logger::NOTICE    => \Raven_Client::DEBUG,
-        Logger::INFO      => \Raven_Client::INFO,
-        Logger::DEBUG     => \Raven_Client::DEBUG,
-        Logger::CUSTOM    => \Raven_Client::INFO,
-        Logger::SPECIAL   => \Raven_Client::INFO,
+        Logger::EMERGENCE => 'fatal',
+        Logger::CRITICAL  => 'fatal',
+        Logger::ALERT     => 'info',
+        Logger::ERROR     => 'error',
+        Logger::WARNING   => 'warning',
+        Logger::NOTICE    => 'debug',
+        Logger::INFO      => 'info',
+        Logger::DEBUG     => 'debug',
+        Logger::CUSTOM    => 'info',
+        Logger::SPECIAL   => 'info',
     ];
 
     /** @var \Raven_Client */
