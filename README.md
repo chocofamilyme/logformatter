@@ -28,11 +28,14 @@ return [
         'domain'    => env('SENTRY_DOMAIN'),
     ],
     'options'      => [
-        'http_connect_timeout' => 2,
+        'http_connect_timeout'  => 2,
+        'http_timeout'          => 2
     ],
     'environments' => ['production', 'staging'],
     'levels'       => [\Phalcon\Logger::EMERGENCY, \Phalcon\Logger::CRITICAL, \Phalcon\Logger::ERROR],
-    'dontReport'   => [],
+    'dontReport'   => [
+        \Chocofamily\Exception\NoticeException::class    
+    ],
 ````
 
 Пример:
