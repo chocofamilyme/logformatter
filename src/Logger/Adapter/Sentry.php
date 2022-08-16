@@ -7,6 +7,8 @@ use Chocofamily\Http\CorrelationId;
 use Phalcon\Config;
 use Phalcon\Logger;
 use Sentry\Client;
+use Sentry\ClientBuilder;
+use Sentry\Severity;
 use Sentry\State\Scope;
 
 /**
