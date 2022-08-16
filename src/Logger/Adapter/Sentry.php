@@ -6,6 +6,7 @@ use Chocofamily\Logger\Formatter\Sentry as Formatter;
 use Chocofamily\Http\CorrelationId;
 use Phalcon\Config;
 use Phalcon\Logger;
+use Sentry\Client;
 
 /**
  * The Sentry logger adapter for phalcon.
@@ -26,7 +27,7 @@ class Sentry extends Logger\Adapter
         Logger::SPECIAL   => 'info',
     ];
 
-    /** @var \Raven_Client */
+    /** @var Client */
     protected $client;
 
     /** @var string The sentry event ID from last request */
@@ -203,11 +204,11 @@ class Sentry extends Logger\Adapter
     /**
      * Sets the raven client.
      *
-     * @param \Raven_Client $client
+     * @param Client $client
      *
      * @return \CrazyFactory\PhalconLogger\Adapter\Sentry
      */
-    public function setClient(\Raven_Client $client): Sentry
+    public function setClient(Client $client): Sentry
     {
         $this->client = $client;
 
@@ -215,9 +216,9 @@ class Sentry extends Logger\Adapter
     }
 
     /**
-     * Gets the raven client.
+     * Gets the http client.
      *
-     * @return \Raven_Client|null
+     * @return Client|null
      */
     public function getClient()
     {
@@ -244,7 +245,7 @@ class Sentry extends Logger\Adapter
     }
 
     /**
-     * Instantiates the Raven_Client.
+     * Instantiates the http client.
      *
      * @return void
      */
@@ -267,7 +268,8 @@ class Sentry extends Logger\Adapter
             $dsn     = sprintf($this->dsnTemplate, $key, $domain, $project);
             $options = ['environment' => $this->environment] + $this->config->options->toArray();
 
-            $this->setClient(new \Raven_Client($dsn, $options));
+            $client = ClientBuilder::create($options)->getClient();
+            $this->setClient($client);
         }
     }
 
