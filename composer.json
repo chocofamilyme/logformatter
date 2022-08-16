@@ -13,8 +13,8 @@
   "homepage": "https://github.com/chocofamilyme/logformatter",
   "authors": [
     {
-      "name": "IT Chocolife.me",
-      "homepage": "https://chocolife.me/"
+      "name": "IT Chocofamily",
+      "homepage": "https://chocofamily.kz/"
     }
   ],
   "require": {
@@ -22,7 +22,7 @@
     "ext-json": "*",
     "ext-phalcon": ">= 3.0.0",
     "chocofamilyme/pathcorrelation": "0.2.*",
-    "sentry/sentry": "^1.10"
+    "sentry/sdk": "^3.1.0"
   },
   "autoload": {
     "psr-4": {

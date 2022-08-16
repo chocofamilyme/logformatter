@@ -86,8 +86,9 @@ class Normalizer
     }
 
     /**
-     * @param  mixed                      $data
-     * @return int|bool|string|null|array
+     * @param mixed $data
+     * @param int $depth
+     * @return mixed
      */
     public function normalize($data, int $depth = 0)
     {
@@ -159,6 +160,7 @@ class Normalizer
 
     /**
      * @return array
+     * @psalm-suppress UndefinedClass
      */
     protected function normalizeException(Throwable $e, int $depth = 0)
     {

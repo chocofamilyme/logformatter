@@ -1,15 +1,15 @@
-# Phalcon - для форматирование логов
+# Phalcon - для форматирования логов
 
 Для создания логов с параметрами для отслеживания запроса
 
 ## Требуется
     - Phalcon > 3.0.0
     - chocofamilyme/pathcorrelation
-    - sentry/sentry
+    - sentry/sdk >= 3.1.0
     
 ## Использование
 
-В конфигурационный файл нужно указать параметр domain
+В конфигурационном файле нужно указать параметр domain
 
 ````php
 return [
@@ -28,14 +28,14 @@ return [
         'domain'    => env('SENTRY_DOMAIN'),
     ],
     'options'      => [
-        'curl_method' => 'async',
-        'prefixes'    => [],
-        'app_path'    => '',
-        'timeout'     => 2,
+        'http_connect_timeout'  => 2,
+        'http_timeout'          => 2
     ],
     'environments' => ['production', 'staging'],
     'levels'       => [\Phalcon\Logger::EMERGENCY, \Phalcon\Logger::CRITICAL, \Phalcon\Logger::ERROR],
-    'dontReport'   => [],
+    'dontReport'   => [
+        \Chocofamily\Exception\NoticeException::class    
+    ],
 ````
 
 Пример:
@@ -45,5 +45,5 @@ $di->setShared('sentry', function () use ($config) {
 });
 
 
- $di->getShared('sentry')->logException($e, [], \Phalcon\Logger::ERROR);
+ $di->getShared('sentry')->logException($e, \Phalcon\Logger::ERROR);
 ````

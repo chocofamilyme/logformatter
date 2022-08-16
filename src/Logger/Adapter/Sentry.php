@@ -6,6 +6,10 @@ use Chocofamily\Logger\Formatter\Sentry as Formatter;
 use Chocofamily\Http\CorrelationId;
 use Phalcon\Config;
 use Phalcon\Logger;
+use Sentry\Client;
+use Sentry\ClientBuilder;
+use Sentry\Severity;
+use Sentry\State\Scope;
 
 /**
  * The Sentry logger adapter for phalcon.
@@ -14,19 +18,19 @@ class Sentry extends Logger\Adapter
 {
     // The map of Phalcon log levels to Sentry log levels. Throughout the application, we use only Phalcon levels.
     const LOG_LEVELS = [
-        Logger::EMERGENCE => \Raven_Client::FATAL,
-        Logger::CRITICAL  => \Raven_Client::FATAL,
-        Logger::ALERT     => \Raven_Client::INFO,
-        Logger::ERROR     => \Raven_Client::ERROR,
-        Logger::WARNING   => \Raven_Client::WARNING,
-        Logger::NOTICE    => \Raven_Client::DEBUG,
-        Logger::INFO      => \Raven_Client::INFO,
-        Logger::DEBUG     => \Raven_Client::DEBUG,
-        Logger::CUSTOM    => \Raven_Client::INFO,
-        Logger::SPECIAL   => \Raven_Client::INFO,
+        Logger::EMERGENCE => 'fatal',
+        Logger::CRITICAL  => 'fatal',
+        Logger::ALERT     => 'info',
+        Logger::ERROR     => 'error',
+        Logger::WARNING   => 'warning',
+        Logger::NOTICE    => 'debug',
+        Logger::INFO      => 'info',
+        Logger::DEBUG     => 'debug',
+        Logger::CUSTOM    => 'info',
+        Logger::SPECIAL   => 'info',
     ];
 
-    /** @var \Raven_Client */
+    /** @var Client */
     protected $client;
 
     /** @var string The sentry event ID from last request */
@@ -46,9 +50,14 @@ class Sentry extends Logger\Adapter
     protected $environment;
 
     /**
+     * @var Scope
+     */
+    protected $scope;
+
+    /**
      * Instantiates new Sentry Adapter with given configuration.
      *
-     * @param \Phalcon\Config|array $config
+     * @param \Phalcon\Config $config
      */
     public function __construct(Config $config, string $environment)
     {
@@ -56,16 +65,7 @@ class Sentry extends Logger\Adapter
         $this->environment   = $environment;
         $this->correlationId = CorrelationId::getInstance();
         $this->initClient();
-    }
-
-    /**
-     * @param string $level
-     *
-     * @return int|null
-     */
-    public static function toPhalconLogLevel(string $level)
-    {
-        return array_flip(static::LOG_LEVELS)[$level] ?? null;
+        $this->initScope();
     }
 
     /**
@@ -73,7 +73,7 @@ class Sentry extends Logger\Adapter
      *
      * @return string|null
      */
-    public static function toSentryLogLevel(int $level)
+    public static function toSentryLogLevel(int $level): ?string
     {
         return static::LOG_LEVELS[$level] ?? null;
     }
@@ -92,59 +92,28 @@ class Sentry extends Logger\Adapter
     {
         $message = $this->getFormatter()->interpolate($message, $context);
 
-        $this->send($message, $type, $context);
+        $this->send($message, $type);
     }
 
     /**
      * Logs the exception to Sentry.
      *
      * @param \Throwable $exception
-     * @param array      $context
-     * @param int|null   $type
+     * @param int        $type
      *
      * @return void
      */
-    public function logException(\Throwable $exception, array $context = [], int $type = null)
+    public function logException(\Throwable $exception, int $type)
     {
-        foreach ($this->config->dontReport as $ignore) {
-            if ($exception instanceof $ignore) {
-                return;
+        if (isset($this->config->dontReport)) {
+            foreach ($this->config->dontReport as $ignore) {
+                if ($exception instanceof $ignore) {
+                    return;
+                }
             }
         }
 
-        $this->send($exception, $type, $context);
-    }
-
-    /**
-     * Sets the user context &/or identifier.
-     *
-     * @param array $context
-     *
-     * @return \CrazyFactory\PhalconLogger\Adapter\Sentry
-     */
-    public function setUserContext(array $context): Sentry
-    {
-        if ($this->client) {
-            $this->client->user_context($context);
-        }
-
-        return $this;
-    }
-
-    /**
-     * Sets the extra context (arbitrary key-value pair).
-     *
-     * @param array $context
-     *
-     * @return \CrazyFactory\PhalconLogger\Adapter\Sentry
-     */
-    public function setExtraContext(array $context): Sentry
-    {
-        if ($this->client) {
-            $this->client->extra_context($context);
-        }
-
-        return $this;
+        $this->send($exception, $type);
     }
 
     /**
@@ -153,38 +122,16 @@ class Sentry extends Logger\Adapter
      * @param string $key
      * @param string $value
      *
-     * @return \CrazyFactory\PhalconLogger\Adapter\Sentry
+     * @return Sentry
      */
     public function setTag(string $key, string $value): Sentry
     {
         if ($this->client) {
-            if (strlen($value) > 200) {
-                $value = substr($value, 0, 200);
+            if (mb_strlen($value) > 200) {
+                $value = mb_substr($value, 0, 200);
             }
-            
-            $this->client->tags_context([$key => $value]);
-        }
 
-        return $this;
-    }
-
-    /**
-     * Append bread crumbs to the Sentry log that can be used to trace process flow.
-     *
-     * @param string $message
-     * @param string $category
-     * @param array  $data
-     * @param int    $type
-     *
-     * @return \CrazyFactory\PhalconLogger\Adapter\Sentry
-     */
-    public function addCrumb(string $message, string $category = 'default', array $data = [], int $type = null): Sentry
-    {
-        if ($this->client) {
-            $level = static::toSentryLogLevel($type ?? Logger::INFO);
-            $crumb = compact('message', 'category', 'data', 'level') + ['timestamp' => time()];
-
-            $this->client->breadcrumbs->record($crumb);
+            $this->scope->setTag($key, $value);
         }
 
         return $this;
@@ -201,13 +148,13 @@ class Sentry extends Logger\Adapter
     }
 
     /**
-     * Sets the raven client.
+     * Sets the http client.
      *
-     * @param \Raven_Client $client
+     * @param Client $client
      *
-     * @return \CrazyFactory\PhalconLogger\Adapter\Sentry
+     * @return Sentry
      */
-    public function setClient(\Raven_Client $client): Sentry
+    public function setClient(Client $client): Sentry
     {
         $this->client = $client;
 
@@ -215,11 +162,11 @@ class Sentry extends Logger\Adapter
     }
 
     /**
-     * Gets the raven client.
+     * Gets the http client.
      *
-     * @return \Raven_Client|null
+     * @return Client|null
      */
-    public function getClient()
+    public function getClient(): ?Client
     {
         return $this->client;
     }
@@ -244,18 +191,21 @@ class Sentry extends Logger\Adapter
     }
 
     /**
-     * Instantiates the Raven_Client.
+     * Instantiates the http client.
      *
      * @return void
      */
     protected function initClient()
     {
-        if (PHP_SAPI == "cli") {
-            $this->config->options->curl_method = 'sync';
+        if (!isset($this->config->environments)) {
+            return;
         }
 
         // Only initialize in configured environment(s).
         if (!in_array($this->environment, $this->config->environments->toArray(), true)) {
+            return;
+        }
+        if (!isset($this->config->credential)) {
             return;
         }
 
@@ -265,10 +215,25 @@ class Sentry extends Logger\Adapter
 
         if ($key && $project && $domain) {
             $dsn     = sprintf($this->dsnTemplate, $key, $domain, $project);
-            $options = ['environment' => $this->environment] + $this->config->options->toArray();
+            $options = [
+                'dsn'           => $dsn,
+                'environment'   => $this->environment
+            ];
+            if (isset($this->config->options)) {
+                $options += $this->config->options->toArray();
+            }
 
-            $this->setClient(new \Raven_Client($dsn, $options));
+            $client = ClientBuilder::create($options)->getClient();
+            $this->setClient($client);
         }
+    }
+
+    /**
+     * @return void
+     */
+    protected function initScope(): void
+    {
+        $this->scope = new Scope();
     }
 
     /**
@@ -276,35 +241,21 @@ class Sentry extends Logger\Adapter
      *
      * @param string|\Throwable $loggable
      * @param int               $type
-     * @param array             $context
      *
      * @return void
      */
-    protected function send($loggable, int $type, array $context = [])
+    protected function send($loggable, int $type)
     {
         if (!$this->shouldSend($type)) {
             return;
         }
 
-        $context += ['level' => static::toSentryLogLevel($type)];
-
-        // Wipe out extraneous keys. Issue #3.
-        $context = array_intersect_key($context, array_flip([
-            'context',
-            'extra',
-            'fingerprint',
-            'level',
-            'logger',
-            'release',
-            'tags',
-        ]));
-
-        // Tag current request ID for search/trace.
-        $this->client->tags_context(['request' => $this->correlationId->getCorrelationId()]);
+        $this->scope->setLevel(new Severity(static::toSentryLogLevel($type)));
+        $this->scope->setTag('correlationId', $this->correlationId->getCorrelationId());
 
         $this->lastEventId = $loggable instanceof \Throwable
-            ? $this->client->captureException($loggable, $context)
-            : $this->client->captureMessage($loggable, [], $context);
+            ? $this->client->captureException($loggable, $this->scope)
+            : $this->client->captureMessage($loggable, null, $this->scope);
     }
 
     /**
@@ -316,6 +267,10 @@ class Sentry extends Logger\Adapter
      */
     protected function shouldSend(int $type): bool
     {
-        return (bool) $this->client && in_array($type, $this->config->levels->toArray(), true);
+        if (!isset($this->config->levels)) {
+            return false;
+        }
+
+        return $this->client && in_array($type, $this->config->levels->toArray(), true);
     }
 }
