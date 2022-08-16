@@ -73,7 +73,7 @@ class Sentry extends Logger\Adapter
      *
      * @return string|null
      */
-    public static function toSentryLogLevel(int $level)
+    public static function toSentryLogLevel(int $level): ?string
     {
         return static::LOG_LEVELS[$level] ?? null;
     }
