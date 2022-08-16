@@ -166,7 +166,7 @@ class Sentry extends Logger\Adapter
      *
      * @return Client|null
      */
-    public function getClient()
+    public function getClient(): ?Client
     {
         return $this->client;
     }
