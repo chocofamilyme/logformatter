@@ -251,8 +251,15 @@ class Sentry extends Logger\Adapter
      */
     protected function initClient()
     {
+        if (!isset($this->config->environments)) {
+            return;
+        }
+
         // Only initialize in configured environment(s).
         if (!in_array($this->environment, $this->config->environments->toArray(), true)) {
+            return;
+        }
+        if (!isset($this->config->credential)) {
             return;
         }
 
@@ -262,7 +269,10 @@ class Sentry extends Logger\Adapter
 
         if ($key && $project && $domain) {
             $dsn     = sprintf($this->dsnTemplate, $key, $domain, $project);
-            $options = ['environment' => $this->environment] + $this->config->options->toArray();
+            $options = ['dsn' => $dsn];
+            if (isset($this->config->options)) {
+                $options += $this->config->options->toArray();
+            }
 
             $client = ClientBuilder::create($options)->getClient();
             $this->setClient($client);
