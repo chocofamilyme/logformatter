@@ -117,38 +117,6 @@ class Sentry extends Logger\Adapter
     }
 
     /**
-     * Sets the user context &/or identifier.
-     *
-     * @param array $context
-     *
-     * @return \CrazyFactory\PhalconLogger\Adapter\Sentry
-     */
-    public function setUserContext(array $context): Sentry
-    {
-        if ($this->client) {
-            $this->client->user_context($context);
-        }
-
-        return $this;
-    }
-
-    /**
-     * Sets the extra context (arbitrary key-value pair).
-     *
-     * @param array $context
-     *
-     * @return \CrazyFactory\PhalconLogger\Adapter\Sentry
-     */
-    public function setExtraContext(array $context): Sentry
-    {
-        if ($this->client) {
-            $this->client->extra_context($context);
-        }
-
-        return $this;
-    }
-
-    /**
      * Sets the tag for logs which can be used for analysis in Sentry backend.
      *
      * @param string $key
