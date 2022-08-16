@@ -138,28 +138,6 @@ class Sentry extends Logger\Adapter
     }
 
     /**
-     * Append bread crumbs to the Sentry log that can be used to trace process flow.
-     *
-     * @param string $message
-     * @param string $category
-     * @param array  $data
-     * @param int    $type
-     *
-     * @return \CrazyFactory\PhalconLogger\Adapter\Sentry
-     */
-    public function addCrumb(string $message, string $category = 'default', array $data = [], int $type = null): Sentry
-    {
-        if ($this->client) {
-            $level = static::toSentryLogLevel($type ?? Logger::INFO);
-            $crumb = compact('message', 'category', 'data', 'level') + ['timestamp' => time()];
-
-            $this->client->breadcrumbs->record($crumb);
-        }
-
-        return $this;
-    }
-
-    /**
      * Gets the last event ID from Sentry.
      *
      * @return string|null
