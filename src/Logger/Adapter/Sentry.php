@@ -116,9 +116,11 @@ class Sentry extends Logger\Adapter
      */
     public function logException(\Throwable $exception, array $context = [], int $type = null)
     {
-        foreach ($this->config->dontReport as $ignore) {
-            if ($exception instanceof $ignore) {
-                return;
+        if (isset($this->config->dontReport)) {
+            foreach ($this->config->dontReport as $ignore) {
+                if ($exception instanceof $ignore) {
+                    return;
+                }
             }
         }
 
