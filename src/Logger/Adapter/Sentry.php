@@ -148,11 +148,11 @@ class Sentry extends Logger\Adapter
     }
 
     /**
-     * Sets the raven client.
+     * Sets the http client.
      *
      * @param Client $client
      *
-     * @return \CrazyFactory\PhalconLogger\Adapter\Sentry
+     * @return Sentry
      */
     public function setClient(Client $client): Sentry
     {
