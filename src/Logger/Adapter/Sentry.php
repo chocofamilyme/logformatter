@@ -102,7 +102,7 @@ class Sentry extends Logger\Adapter
     {
         $message = $this->getFormatter()->interpolate($message, $context);
 
-        $this->send($message, $type, $context);
+        $this->send($message, $type);
     }
 
     /**
@@ -122,7 +122,7 @@ class Sentry extends Logger\Adapter
             }
         }
 
-        $this->send($exception, $type, $context);
+        $this->send($exception, $type);
     }
 
     /**
